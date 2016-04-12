@@ -22,7 +22,7 @@ for version in 2 3; do
   }
 
   if [ "$1" == "" ]; then
-    for test in *.py; do
+    for test in *_test.py; do
       run_test "$test"
     done
   else
