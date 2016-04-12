@@ -20,10 +20,43 @@ If you are on a system with `easy_install` but not [`pip`](http://www.pip-instal
 
 ## Usage
 
-## More Help
+Visit [instrumentalapp.com](https://instrumentalapp.com) and create an account, then initialize the agent with your API key, found in the Docs section.
+
+```python
+i = Agent("YOUR_API_KEY", enabled=True)
+```
+
+You'll  probably want something like the above, only enabling the agent in production mode so you don't have development and production data writing to the same place. Or you can setup two projects, so that you can verify stats in one, and release them to production in another.
+
+Now you can begin to use Instrumental to track your application.
+
+```python
+a.gauge('load', 1.23)                # value at a point in time
+
+a.increment('signups')               # increasing value, think "events"
+
+a.time('query_time', lambda: Post.find(1)) # time a method call
+
+a.time_ms('query_time', lambda: Post.find(1))
+```
+
+**Note**: For your app's safety, the agent is meant to isolate your app from any problems our service might suffer. If it is unable to connect to the service, it will discard data after reaching a low memory threshold.
+
+Want to track an event (like an application deploy, or downtime)? You can capture events that are instantaneous, or events that happen over a period of time.
+
+```sh
+a.notice('Jeffy deployed rev ef3d6a') # instantaneous event
+a.notice('Testing socket buffer increase', time.time(), timedelta(minutes=20)) # an event with a duration
+```
 
 
-## Development
+## Server Stats
+
+Want some general server stats (load, memory, etc.)? Check out the [instrumental_tools](https://github.com/expectedbehavior/instrumental_tools) gem.
+
+```sh
+gem install instrumental_tools
+instrument_server
 
 
 ## Release Process
