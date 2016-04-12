@@ -162,7 +162,7 @@ class Agent:
 
     def send_command(self, cmd, *args):
         if self.enabled:
-            string_cmd = "%s %s\n" % (cmd, self.join_strings(map(lambda a: str(a), args), " "))
+            string_cmd = "%s %s\n" % (cmd, self.join_strings(map(str, args), " "))
             if not self.is_running():
                 self.start_connection_worker()
             try:
