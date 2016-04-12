@@ -4,7 +4,13 @@ import logging
 import socket, ssl
 import time, re, string
 
-import Queue
+
+import sys
+if sys.version_info[0] < 3:
+    from Queue import Queue
+else:
+    from queue import Queue
+
 from threading import Thread
 
 class Agent:
@@ -153,7 +159,7 @@ class Agent:
 
     def send_command(self, cmd, *args):
         if self.enabled:
-            string_cmd = "%s %s\n" % (cmd, string.join(map(lambda a: str(a), args), " "))
+            string_cmd = "%s %s\n" % (cmd, self.join_strings(map(lambda a: str(a), args), " "))
             if not self.is_running():
                 self.start_connection_worker()
             self.queue.put(string_cmd)
@@ -187,6 +193,12 @@ class Agent:
 
     def time_ms(self, metric, fun):
         return self.time(fun, 1000)
+
+    def join_strings(self, strings, joiner):
+        if sys.version_info[0] < 3:
+            return string.join(strings, joiner)
+        else:
+            return joiner.join(strings)
 
 
 # TODO: error handling
