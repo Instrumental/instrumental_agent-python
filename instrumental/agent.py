@@ -192,7 +192,7 @@ class Agent:
     def is_valid_note(self, note):
         return not bool(re.search("[\n\r]", note))
 
-    def time(self, metric, fun, multiplier = 1):
+    def time(self, metric, fun, multiplier=1):
         start = time.time()
         value = fun()
         finish = time.time()
