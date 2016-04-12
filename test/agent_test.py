@@ -15,6 +15,12 @@ def slowFunction(x):
     time.sleep(0.1)
     return x * 2
 
+# should call function
+# should return value
+# should track metric
 x = 5
 print(" 5 * 2 = " + str(a.time("time_test", lambda: slowFunction(x))))
 
+# should not be blocking
+for i in range(Agent.max_buffer + 1):
+  a.increment("z")

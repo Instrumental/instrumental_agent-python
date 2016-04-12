@@ -7,9 +7,9 @@ import time, re, string
 
 import sys
 if sys.version_info[0] < 3:
-    from Queue import Queue
+    from Queue import Queue, Full
 else:
-    from queue import Queue
+    from queue import Queue, Full
 
 from threading import Thread
 
@@ -162,7 +162,11 @@ class Agent:
             string_cmd = "%s %s\n" % (cmd, self.join_strings(map(lambda a: str(a), args), " "))
             if not self.is_running():
                 self.start_connection_worker()
-            self.queue.put(string_cmd)
+            try:
+                self.queue.put(string_cmd, False)
+            except Full:
+                self.logger.debug("Queue full(limit %i), discarding metric" % Agent.max_buffer)
+
 
 
     def is_valid(self, metric, value, time, count):
