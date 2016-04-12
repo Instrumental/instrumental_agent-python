@@ -1,15 +1,17 @@
 from instrumental import Agent
 import time
+from datetime import datetime, timedelta
 
 a = Agent("4af0fb2451e9d873452d856579a74e7b", collector="localhost:8000", secure=False)
 a.gauge("gauge_test", 1)
 a.gauge("gauge_test", 2.5, 100, 2)
 a.increment("increment_test", 1)
 a.increment("increment_test", 2.5, 100, 2)
-a.notice("Hello world")
-a.notice("Hello world", 100)
-a.notice("Hello world", 100, 50)
-
+a.increment("increment_test", 2.5, time.time())
+a.increment("increment_test", 2.5, datetime.now())
+a.notice("z", 1, 2)
+a.notice("z", time.time())
+a.notice("z", datetime.now() - timedelta(minutes=5), timedelta(minutes=2))
 
 def slowFunction(x):
     time.sleep(0.1)

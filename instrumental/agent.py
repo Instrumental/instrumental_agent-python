@@ -2,7 +2,7 @@ import os, sys, atexit
 from logging import Logger
 import logging
 import socket, ssl
-import time, re, string
+import time, datetime, re, string
 
 
 import sys
@@ -87,17 +87,16 @@ class Agent:
     # TODO consider return values or at least follow Ruby patterns
     def gauge(self, metric, value, time = time.time(), count = 1):
         if self.is_valid(metric, value, time, count):
-            self.send_command("gauge", metric, value, int(time), count)
+            self.send_command("gauge", metric, value, self.normalize_time(time), count)
 
     # TODO consider return values or at least follow Ruby patterns
     def increment(self, metric, value = 1, time = time.time(), count = 1):
         if self.is_valid(metric, value, time, count):
-            self.send_command("increment", metric, value, int(time), count)
-
+            self.send_command("increment", metric, value, self.normalize_time(time), count)
 
     def notice(self, note, time = time.time(), duration = 0):
       if self.is_valid_note(note):
-        self.send_command("notice", int(time), int(duration), note)
+        self.send_command("notice", self.normalize_time(time), self.normalize_time(duration), note)
 
     def is_running(self):
         return bool(self.worker) and bool(os.getpid() == self.pid)
@@ -203,6 +202,15 @@ class Agent:
             return string.join(strings, joiner)
         else:
             return joiner.join(strings)
+
+    # Returns unix timestamp integer for all common time/duration formats.
+    def normalize_time(self, time_like):
+        if isinstance(time_like, datetime.datetime):
+            time_like = time.mktime(time_like.utctimetuple())
+        if isinstance(time_like, datetime.timedelta):
+            time_like = time_like.total_seconds()
+        return int(time_like)
+
 
 
 # TODO: error handling
