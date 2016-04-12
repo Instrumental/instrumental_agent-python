@@ -31,13 +31,13 @@ You'll  probably want something like the above, only enabling the agent in produ
 Now you can begin to use Instrumental to track your application.
 
 ```python
-a.gauge('load', 1.23)                # value at a point in time
+a.gauge('load', 1.23)                         # value at a point in time
 
-a.increment('signups')               # increasing value, think "events"
+a.increment('signups')                        # increasing value, think "events"
 
-a.time('query_time', lambda: Post.find(1)) # time a method call
+a.time('query_time', lambda: Post.find(1))    # time a method call
 
-a.time_ms('query_time', lambda: Post.find(1))
+a.time_ms('query_time', lambda: Post.find(1)) # prefer milliseconds?
 ```
 
 **Note**: For your app's safety, the agent is meant to isolate your app from any problems our service might suffer. If it is unable to connect to the service, it will discard data after reaching a low memory threshold.
