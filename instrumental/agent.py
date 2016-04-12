@@ -1,8 +1,14 @@
-import os, sys, atexit
-from logging import Logger
+import os
+import sys
+import atexit
+# from logging import Logger
 import logging
-import socket, ssl
-import time, datetime, re, string
+import socket
+import ssl
+import time
+import datetime
+import re
+import string
 
 
 import sys
@@ -26,7 +32,7 @@ class Agent:
     exit_timeout = 1
     # reply_timeout = 10
 
-    def __init__(self, api_key, collector="collector.instrumentalapp.com:8001", enabled = True, secure = True, verify_cert = True, synchronous = False):
+    def __init__(self, api_key, collector="collector.instrumentalapp.com:8001", enabled=True, secure=True, verify_cert=True, synchronous=False):
         self.logger = logging.getLogger()
         self.logger.setLevel(logging.DEBUG)
 
@@ -85,16 +91,16 @@ class Agent:
 
 
     # TODO consider return values or at least follow Ruby patterns
-    def gauge(self, metric, value, time = time.time(), count = 1):
+    def gauge(self, metric, value, time=time.time(), count=1):
         if self.is_valid(metric, value, time, count):
             self.send_command("gauge", metric, value, self.normalize_time(time), count)
 
     # TODO consider return values or at least follow Ruby patterns
-    def increment(self, metric, value = 1, time = time.time(), count = 1):
+    def increment(self, metric, value=1, time=time.time(), count=1):
         if self.is_valid(metric, value, time, count):
             self.send_command("increment", metric, value, self.normalize_time(time), count)
 
-    def notice(self, note, time = time.time(), duration = 0):
+    def notice(self, note, time=time.time(), duration=0):
       if self.is_valid_note(note):
         self.send_command("notice", self.normalize_time(time), self.normalize_time(duration), note)
 
