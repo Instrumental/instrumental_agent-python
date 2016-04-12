@@ -15,6 +15,7 @@ else:
     from queue import Queue, Full
 
 from threading import Thread
+import pkg_resources
 
 class Agent:
     """
@@ -27,6 +28,7 @@ class Agent:
     max_buffer = 5000
     max_reconnect_delay = 15
     exit_timeout = 1
+    version = pkg_resources.get_distribution("instrumental").version
     # reply_timeout = 10
 
     def __init__(self, api_key, collector="collector.instrumentalapp.com:8001", enabled=True, secure=True, verify_cert=True, synchronous=False):
@@ -127,7 +129,7 @@ class Agent:
                 self.socket = bare_socket
 
             self.socket.connect((self.host, self.port))
-            self.socket.send("hello version=0.0.1 agent=python\nauthenticate %s\n" % self.api_key)
+            self.socket.send("hello version=%s agent=python\nauthenticate %s\n" % (Agent.version, self.api_key))
 
             data = ""
             ok_count = 0
