@@ -17,6 +17,7 @@ class Agent:
     hostname = socket.gethostname()
     max_buffer = 5000
     max_reconnect_delay = 15
+    exit_timeout = 1
     # reply_timeout = 10
 
     def __init__(self, api_key, collector="collector.instrumentalapp.com:8001", enabled = True, secure = True, verify_cert = True, synchronous = False):
@@ -47,7 +48,7 @@ class Agent:
 
 
         if self.enabled:
-            self.queue = Queue.Queue(Agent.max_buffer)
+            self.queue = Queue(Agent.max_buffer)
             self.setup_cleanup_at_exit()
 
     def setup_cleanup_at_exit(self):
@@ -56,13 +57,24 @@ class Agent:
 
 
     def cleanup(self):
-        if self.worker and self.worker.is_alive:
-            self.logger.debug("At Exit handler, joining (count: %i) " % (self.queue.qsize()))
-            self.queue.join()
-            # TODO flush?
-            self.logger.debug("Join completed.")
-        else:
-            self.logger.debug("At Exit handler, join skiped, worker not running.")
+        try:
+            if self.worker and self.worker.is_alive:
+                if self.queue.empty():
+                    self.logger.debug("At Exit handler, join skiped, worker not running. Discarded %i metrics", self.queue.qsize())
+                else:
+                    self.logger.debug("At Exit handler, waiting up to %0.3f seconds (count: %i) " % (Agent.exit_timeout, self.queue.qsize()))
+                    started = time.time()
+                    while (time.time() - started) < Agent.exit_timeout and not self.queue.empty():
+                        time.sleep(0.05)
+                    if self.queue.empty():
+                        self.logger.debug("All metrics pushed.")
+                    else:
+                        self.logger.info("Discarding %i metrics." % self.queue.qsize())
+            else:
+                self.logger.debug("At Exit handler, join skiped, worker not running.")
+        except Exception as error:
+            self.logger.error("At Exit ERROR: " + str(error))
+
 
 
 
