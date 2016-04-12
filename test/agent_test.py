@@ -1,9 +1,5 @@
 from instrumental import Agent
 import re
-# import pdb
-# import sys
-
-# PYTHON_VERSION = sys.version_info[0]
 
 def test_should_increment():
     a = Agent("56c08a1a5b25ed2425b6dce7700edae5", collector="localhost:8000", secure=False)
@@ -28,7 +24,3 @@ def test_should_send_notice():
     expected_message = re.compile('.*(notice \d{10} 0 Python Agent Test Is Running).*')
     match = expected_message.match(str(a.queue.queue))
     assert match, "expected gauge to be in queue, instead have {0}".format(a.queue.queue)
-    
-
-
-    

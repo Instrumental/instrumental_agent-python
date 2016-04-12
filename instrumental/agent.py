@@ -1,7 +1,6 @@
 import os
 import sys
 import atexit
-# from logging import Logger
 import logging
 import socket
 import ssl
@@ -9,8 +8,6 @@ import time
 import datetime
 import re
 import string
-
-
 import sys
 if sys.version_info[0] < 3:
     from Queue import Queue, Full
@@ -86,7 +83,6 @@ class Agent:
                 self.logger.debug("At Exit handler, join skiped, worker not running.")
         except Exception as error:
             self.logger.error("At Exit ERROR: " + str(error))
-
 
 
 
@@ -222,4 +218,3 @@ class Agent:
 # TODO: error handling
 # TODO: connection retrying
 # TODO: threadsafe init?
-
