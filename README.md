@@ -57,7 +57,7 @@ Want some general server stats (load, memory, etc.)? Check out the [instrumental
 ```sh
 gem install instrumental_tools
 instrument_server
-
+```
 
 ## Release Process
 
