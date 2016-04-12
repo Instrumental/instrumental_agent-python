@@ -1,28 +1,34 @@
 from instrumental import Agent
-import time
-from datetime import datetime, timedelta
+import re
+# import pdb
+# import sys
 
-a = Agent("4af0fb2451e9d873452d856579a74e7b", collector="localhost:8000", secure=False)
-a.gauge("gauge_test", 1)
-a.gauge("gauge_test", 2.5, 100, 2)
-a.increment("increment_test", 1)
-a.increment("increment_test", 2.5, 100, 2)
-a.increment("increment_test", 2.5, time.time())
-a.increment("increment_test", 2.5, datetime.now())
-a.notice("z", 1, 2)
-a.notice("z", time.time())
-a.notice("z", datetime.now() - timedelta(minutes=5), timedelta(minutes=2))
+# PYTHON_VERSION = sys.version_info[0]
 
-def slowFunction(x):
-    time.sleep(0.1)
-    return x * 2
+def test_should_increment():
+    a = Agent("56c08a1a5b25ed2425b6dce7700edae5", collector="localhost:8000", secure=False)
+    a.increment("python.increment")
+    assert(a.queue.qsize()) == 1
+    expected_message = re.compile('.*(increment python.increment 1 \d{10} 1).*')
+    match = expected_message.match(str(a.queue.queue))
+    assert match, "expected increment to be in queue, instead have {0}".format(a.queue.queue)
 
-# should call function
-# should return value
-# should track metric
-x = 5
-print(" 5 * 2 = " + str(a.time("time_test", lambda: slowFunction(x))))
+def test_should_gauge():
+    a = Agent("56c08a1a5b25ed2425b6dce7700edae5", collector="localhost:8000", secure=False)
+    a.gauge("python.gauge", 5)
+    assert(a.queue.qsize()) == 1
+    expected_message = re.compile('.*(gauge python.gauge 5 \d{10} 1).*')
+    match = expected_message.match(str(a.queue.queue))
+    assert match, "expected gauge to be in queue, instead have {0}".format(a.queue.queue)
 
-# should not be blocking
-for i in range(Agent.max_buffer + 1):
-  a.increment("z")
+def test_should_send_notice():
+    a = Agent("56c08a1a5b25ed2425b6dce7700edae5", collector="localhost:8000", secure=False)
+    a.notice("Python Agent Test Is Running")
+    assert(a.queue.qsize()) == 1
+    expected_message = re.compile('.*(notice \d{10} 0 Python Agent Test Is Running).*')
+    match = expected_message.match(str(a.queue.queue))
+    assert match, "expected gauge to be in queue, instead have {0}".format(a.queue.queue)
+    
+
+
+    
