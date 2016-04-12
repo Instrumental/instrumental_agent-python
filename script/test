@@ -12,8 +12,8 @@ virtualenv --version > /dev/null  || (echo "virtualenv must be installed"; exit 
 for version in 2 3; do
   rm -rf venv-$version
   virtualenv --python="$(which "python$version")" "venv-$version"
-  pip install pytest
   source "venv-$version/bin/activate"
+  pip install pytest
   pip install --upgrade ../
 
   # runs a test file with PASS/FAIL message
