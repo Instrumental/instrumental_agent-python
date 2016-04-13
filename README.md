@@ -23,6 +23,7 @@ If you are on a system with `easy_install` but not [`pip`](http://www.pip-instal
 Visit [instrumentalapp.com](https://instrumentalapp.com) and create an account, then initialize the agent with your API key, found in the Docs section.
 
 ```python
+from instrumental_agent import Agent
 i = Agent("YOUR_API_KEY", enabled=True)
 ```
 
