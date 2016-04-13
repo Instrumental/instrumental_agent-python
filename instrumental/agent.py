@@ -168,7 +168,7 @@ class Agent(object):
         try:
             if self.is_running:
                 if self.queue.empty():
-                    self.logger.debug("At Exit handler, join skiped, worker not running. Discarded %i metrics", self.queue.qsize())
+                    self.logger.debug("At Exit handler, join skipped, queue empty.")
                 else:
                     self.logger.debug("At Exit handler, waiting up to %0.3f seconds (count: %i) ", Agent.exit_timeout, self.queue.qsize())
                     started = time.time()
@@ -179,7 +179,7 @@ class Agent(object):
                     else:
                         self.logger.info("Discarding %i metrics.", self.queue.qsize())
             else:
-                self.logger.debug("At Exit handler, join skiped, worker not running.")
+                self.logger.debug("At Exit handler, join skipped, worker not running.")
         except Exception as error:
             self.logger.error("At Exit ERROR: " + str(error))
 
