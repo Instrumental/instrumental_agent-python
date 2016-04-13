@@ -209,6 +209,8 @@ class Agent:
 
     # Returns unix timestamp integer for all common time/duration formats.
     def normalize_time(self, time_like):
+        if isinstance(time_like, time.struct_time):
+            time_like = time.mktime(time_like)
         if isinstance(time_like, datetime.datetime):
             time_like = time.mktime(time_like.utctimetuple())
         if isinstance(time_like, datetime.timedelta):
