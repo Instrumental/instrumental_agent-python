@@ -47,6 +47,14 @@ def test_should_increment_with_struct_time():
     match = expected_message.match(str(a.queue.queue))
     assert match, "expected increment to be in queue, instead have {0}".format(a.queue.queue)
 
+def test_not_should_increment_with_invalid_metric():
+    a = Agent("56c08a1a5b25ed2425b6dce7700edae5", collector="localhost:8000", secure=False)
+    a.increment("bad metric")
+    a.increment(" badmetric")
+    a.increment("badmetric ")
+    a.increment("bad(metric")
+    assert(a.queue.qsize()) == 0
+
 def test_should_gauge():
     a = Agent("56c08a1a5b25ed2425b6dce7700edae5", collector="localhost:8000", secure=False)
     a.gauge("python.gauge", 5)
@@ -105,13 +113,11 @@ def test_should_send_notice_with_integer_time_and_timedelta_duration():
     match = expected_message.match(str(a.queue.queue))
     assert match, "expected gauge to be in queue, instead have {0}".format(a.queue.queue)
 
-def test_should_send_notice():
+def test_should_not_send_notice_with_invalid_message():
     a = Agent("56c08a1a5b25ed2425b6dce7700edae5", collector="localhost:8000", secure=False)
-    a.notice("Python Agent Test Is Running")
-    assert(a.queue.qsize()) == 1
-    expected_message = re.compile('.*(notice \d{10} 0 Python Agent Test Is Running).*')
-    match = expected_message.match(str(a.queue.queue))
-    assert match, "expected gauge to be in queue, instead have {0}".format(a.queue.queue)
+    a.notice("Bad\nNotice")
+    a.notice("Bad\rNotice")
+    assert(a.queue.qsize()) == 0
 
 def test_should_not_block():
     a = Agent("56c08a1a5b25ed2425b6dce7700edae5", collector="localhost:8000", secure=False)

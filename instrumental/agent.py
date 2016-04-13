@@ -31,9 +31,9 @@ def normalize_time(time_like):
 
 def is_valid(metric, value, time, count):
     """Returns True/False if a metric/value/time/count is valid"""
-    valid_metric = re.search("^([\d\w\-_]+\.)*[\d\w\-_]+$", metric, re.IGNORECASE)
+    valid_metric = re.search(r"^([\d\w\-_]+\.)*[\d\w\-_]+$", metric)
 
-    valid_value = re.search("^-?\d+(\.\d+)?(e-\d+)?$", str(value))
+    valid_value = re.search(r"^-?\d+(\.\d+)?(e-\d+)?$", str(value))
 
     if valid_metric and valid_value:
         return True
