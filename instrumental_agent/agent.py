@@ -197,44 +197,62 @@ class Agent(object):
     def _worker_loop(self):
         self.logger.debug("worker starting...")
         while True:
-            bare_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+            try:
+                bare_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+                    
+                if self.secure:
+                    # Rely on server to enforce secure protocol/ciphers
+                    self.socket = ssl.wrap_socket(bare_socket)
+                else:
+                    self.socket = bare_socket
+                    
+                self.socket.connect((self.host, self.port))
 
-            if self.secure:
-                # Rely on server to enforce secure protocol/ciphers
-                self.socket = ssl.wrap_socket(bare_socket)
-            else:
-                self.socket = bare_socket
-
-            self.socket.connect((self.host, self.port))
-            self.socket.send("hello version=%s agent=python\n" % Agent.version)
-            self.socket.send("authenticate %s\n" % self.api_key)
-
-            data = ""
-            ok_count = 0
-            receiving = True
-            connected = False
-            while receiving:
-                data += self.socket.recv(1024)
-                while "\n" in data:
-                    self.logger.debug("initial data: %s" % repr(data))
-                    response, data = data.split("\n", 1)
-                    self.logger.debug("  response: %s" % repr(response))
-                    self.logger.debug("  data: %s" % repr(data))
-                    if response == "ok":
-                        ok_count += 1
-                        if ok_count >= 2:
-                            self.logger.debug("auth a-ok")
-                            receiving = False
-                            connected = True
-                            break
+                def socket_send(data):
+                    if sys.version_info[0] < 3:
+                        self.socket.send(data)
                     else:
-                        self.logger.debug("auth failed...")
-                        break
-            if connected:
-                while True:
-                    item = self.queue.get()
-                    self.socket.send(item)
-                    self.queue.task_done()
+                        self.socket.send(bytes(data, "ASCII"))
+
+                socket_send("hello version=%s agent=python\n" % Agent.version)
+                socket_send("authenticate %s\n" % self.api_key)
+                
+                data = b""
+                ok_count = 0
+                receiving = True
+                connected = False
+                while receiving:
+                    data += self.socket.recv(1024)
+                    while b"\n" in data:
+                        self.logger.debug("initial data: %s" % repr(data))
+                        response, data = data.split(b"\n", 1)
+                        self.logger.debug("  response: %s" % repr(response))
+                        self.logger.debug("  data: %s" % repr(data))
+                        if response == b"ok":
+                            ok_count += 1
+                            if ok_count >= 2:
+                                self.logger.debug("auth a-ok")
+                                receiving = False
+                                connected = True
+                                break
+                        else:
+                            self.logger.debug("auth failed...")
+                            break
+                if connected:
+                    while True:
+                        item = self.queue.get()
+                        socket_send(item)
+                        self.queue.task_done()
+            except (KeyboardInterrupt, SystemExit):
+                raise
+            except Exception as error:
+                self.failures += 1
+                delay = min((self.failures - 1) ** Agent.backoff, Agent.max_reconnect_delay)
+                time.sleep(delay)
+                self.logger.debug("EXCEPTION %s", str(error))
+                import traceback
+                traceback.print_exc(file=sys.stdout)
+                sys.exit()
 
     def _send_command(self, cmd, *args):
         if self.enabled:
