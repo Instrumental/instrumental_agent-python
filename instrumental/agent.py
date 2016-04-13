@@ -66,7 +66,9 @@ class Agent:
         try:
             if self.worker and self.worker.is_alive:
                 if self.queue.empty():
-                    self.logger.debug("At Exit handler, join skiped, worker not running. Discarded %i metrics", self.queue.qsize())
+                    # TODO: why declare the worker not running when we
+                    # just checked is_alive?
+                    self.logger.debug("At Exit handler, queue empty.")
                 else:
                     self.logger.debug("At Exit handler, waiting up to %0.3f seconds (count: %i) " % (Agent.exit_timeout, self.queue.qsize()))
                     started = time.time()
@@ -77,7 +79,7 @@ class Agent:
                     else:
                         self.logger.info("Discarding %i metrics." % self.queue.qsize())
             else:
-                self.logger.debug("At Exit handler, join skiped, worker not running.")
+                self.logger.debug("At Exit handler, join skipped, worker not running.")
         except Exception as error:
             self.logger.error("At Exit ERROR: " + str(error))
 
@@ -153,7 +155,6 @@ class Agent:
                     item = self.queue.get()
                     self.socket.send(item)
                     self.queue.task_done()
-
 
 
     def send_command(self, cmd, *args):
