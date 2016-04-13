@@ -2,13 +2,13 @@ import os
 import sys
 import atexit
 import logging
+import exceptions
 import socket
 import ssl
 import time
 import datetime
 import re
 import string
-import sys
 if sys.version_info[0] < 3:
     from Queue import Queue, Full
 else:
@@ -17,10 +17,53 @@ else:
 from threading import Thread
 import pkg_resources
 
-class Agent:
+
+def normalize_time(time_like):
+    """Returns unix timestamp integer for all common time/duration formats."""
+    if isinstance(time_like, time.struct_time):
+        time_like = time.mktime(time_like)
+    if isinstance(time_like, datetime.datetime):
+        time_like = time.mktime(time_like.utctimetuple())
+    if isinstance(time_like, datetime.timedelta):
+        time_like = time_like.total_seconds()
+    return int(time_like)
+
+
+def is_valid(metric, value, time, count):
+    """Returns True/False if a metric/value/time/count is valid"""
+    valid_metric = re.search("^([\d\w\-_]+\.)*[\d\w\-_]+$", metric, re.IGNORECASE)
+
+    valid_value = re.search("^-?\d+(\.\d+)?(e-\d+)?$", str(value))
+
+    if valid_metric and valid_value:
+        return True
+
+    # TODO
+    # report_invalid_metric(metric) unless valid_metric
+    # report_invalid_value(metric, value) unless valid_value
+    return False
+
+
+def is_valid_note(message):
+    """Returns True/False if a notice message is valid."""
+    return not bool(re.search("[\n\r]", message))
+
+
+def join(strings, joiner):
     """
+    Joins a list of strings together with an interleaved joiner string.
+    This is a compatibility function for Python 2/3.
     """
-    # TODO: other variables
+    if sys.version_info[0] < 3:
+        return string.join(strings, joiner)
+    else:
+        return joiner.join(strings)
+
+
+class Agent(object):
+    """
+    Used to connect to Instrumental and send metric data.
+    """
     backoff = 2
     connect_timeout = 20
     exit_flush_timeout = 5
@@ -28,6 +71,7 @@ class Agent:
     max_buffer = 5000
     max_reconnect_delay = 15
     exit_timeout = 1
+    log_format = '%(asctime)s - %(name)s - %(levelname)s - %(message)s'
     version = pkg_resources.get_distribution("instrumental").version
     # reply_timeout = 10
 
@@ -35,11 +79,11 @@ class Agent:
         self.logger = logging.getLogger()
         self.logger.setLevel(logging.DEBUG)
 
-        ch = logging.StreamHandler(sys.stderr)
-        ch.setLevel(logging.DEBUG)
-        formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
-        ch.setFormatter(formatter)
-        self.logger.addHandler(ch)
+        handler = logging.StreamHandler(sys.stderr)
+        handler.setLevel(logging.DEBUG)
+        formatter = logging.Formatter(Agent.log_format)
+        handler.setFormatter(formatter)
+        self.logger.addHandler(handler)
 
         self.logger.debug("Initializing...")
 
@@ -56,80 +100,115 @@ class Agent:
         self.logger = logging.getLogger()
         self.logger.setLevel(logging.DEBUG)
 
-
+        self.pid = None
+        self.failures = 0
 
         if self.enabled:
             self.queue = Queue(Agent.max_buffer)
-            self.setup_cleanup_at_exit()
+            self._setup_cleanup_at_exit()
 
-    def setup_cleanup_at_exit(self):
+    def gauge(self, metric, value, time=time.time(), count=1):
+        """
+        Store a gauge for a metric, optionally at a specific time.
+        """
+        if is_valid(metric, value, time, count):
+            self._send_command("gauge", metric, value, normalize_time(time), count)
+        # TODO consider return values or at least follow Ruby patterns
+
+    def increment(self, metric, value=1, time=time.time(), count=1):
+        """
+        Increment a metric, optionally more than one or at a specific time.
+        """
+        if is_valid(metric, value, time, count):
+            self._send_command("increment", metric, value, normalize_time(time), count)
+        # TODO consider return values or at least follow Ruby patterns
+
+    def notice(self, note, time=time.time(), duration=0):
+        """
+        Records a note at a specific time and duration. Useful for things like
+        deploys or other significant changes.
+        """
+        if is_valid_note(note):
+            self._send_command("notice", normalize_time(time), normalize_time(duration), note)
+
+    def time(self, metric, fun, multiplier=1):
+        """
+        Store the execution duration of a function in a metric. Multiplier can
+        be used to scale the duration to desired unit or change the duration
+        in some meaningful way. Default is in seconds.
+        """
+        start = time.time()
+        value = fun()
+        finish = time.time()
+        duration = finish - start
+        self.gauge(metric, duration * multiplier, start)
+        return value
+
+    def time_ms(self, metric, fun):
+        """
+        Store the execution duration of a function in a metric. Execution time
+        is measured in milliseconds.
+        """
+        return self.time(metric, fun, 1000)
+
+    def is_running(self):
+        """Returns True/False if the worker is running"""
+        return self._same_pid() and self._worker_alive()
+
+    def _same_pid(self):
+        return bool(os.getpid() == self.pid)
+
+    def _worker_alive(self):
+        return bool(self.worker) and self.worker.is_alive()
+
+    def _setup_cleanup_at_exit(self):
         self.logger.debug("registering exit handler")
-        atexit.register(self.cleanup)
+        atexit.register(self._cleanup)
 
-
-    def cleanup(self):
+    def _cleanup(self):
         try:
-            if self.worker and self.worker.is_alive:
+            if self.is_running:
                 if self.queue.empty():
                     self.logger.debug("At Exit handler, join skiped, worker not running. Discarded %i metrics", self.queue.qsize())
                 else:
-                    self.logger.debug("At Exit handler, waiting up to %0.3f seconds (count: %i) " % (Agent.exit_timeout, self.queue.qsize()))
+                    self.logger.debug("At Exit handler, waiting up to %0.3f seconds (count: %i) ", Agent.exit_timeout, self.queue.qsize())
                     started = time.time()
                     while (time.time() - started) < Agent.exit_timeout and not self.queue.empty():
                         time.sleep(0.05)
                     if self.queue.empty():
                         self.logger.debug("All metrics pushed.")
                     else:
-                        self.logger.info("Discarding %i metrics." % self.queue.qsize())
+                        self.logger.info("Discarding %i metrics.", self.queue.qsize())
             else:
                 self.logger.debug("At Exit handler, join skiped, worker not running.")
-        except Exception as error:
+        except exceptions.StandardError as error:
             self.logger.error("At Exit ERROR: " + str(error))
 
-
-
-    # TODO consider return values or at least follow Ruby patterns
-    def gauge(self, metric, value, time=time.time(), count=1):
-        if self.is_valid(metric, value, time, count):
-            self.send_command("gauge", metric, value, self.normalize_time(time), count)
-
-    # TODO consider return values or at least follow Ruby patterns
-    def increment(self, metric, value=1, time=time.time(), count=1):
-        if self.is_valid(metric, value, time, count):
-            self.send_command("increment", metric, value, self.normalize_time(time), count)
-
-    def notice(self, note, time=time.time(), duration=0):
-      if self.is_valid_note(note):
-        self.send_command("notice", self.normalize_time(time), self.normalize_time(duration), note)
-
-    def is_running(self):
-        return bool(self.worker) and bool(os.getpid() == self.pid)
-
-    def start_connection_worker(self):
+    def _start_connection_worker(self):
         if self.enabled:
             # TODO disconnect
             self.pid = os.getpid()
             self.failures = 0
             self.logger.debug("Starting thread...")
 
-            self.worker = Thread(target=self.worker_loop)
-            self.worker.setDaemon(True) # Must be set or exit handler will not be called if this thread is alive
+            self.worker = Thread(target=self._worker_loop)
+            self.worker.setDaemon(True)  # So exit handler won't wait on this
             self.worker.start()
 
-
-    def worker_loop(self):
+    def _worker_loop(self):
         self.logger.debug("worker starting...")
         while True:
             bare_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 
             if self.secure:
-                # No SSL options required as server enforces only secure protocol/ciphers
+                # Rely on server to enforce secure protocol/ciphers
                 self.socket = ssl.wrap_socket(bare_socket)
             else:
                 self.socket = bare_socket
 
             self.socket.connect((self.host, self.port))
-            self.socket.send("hello version=%s agent=python\nauthenticate %s\n" % (Agent.version, self.api_key))
+            self.socket.send("hello version=%s agent=python\n" % Agent.version)
+            self.socket.send("authenticate %s\n" % self.api_key)
 
             data = ""
             ok_count = 0
@@ -158,64 +237,18 @@ class Agent:
                     self.socket.send(item)
                     self.queue.task_done()
 
-
-
-    def send_command(self, cmd, *args):
+    def _send_command(self, cmd, *args):
         if self.enabled:
-            string_cmd = "%s %s\n" % (cmd, self.join_strings(map(str, args), " "))
+            args = [str(arg) for arg in args]
+            string_cmd = "%s %s\n" % (cmd, join(args, " "))
             if not self.is_running():
-                self.start_connection_worker()
+                self._start_connection_worker()
             try:
                 self.queue.put(string_cmd, False)
             except Full:
-                self.logger.debug("Queue full(limit %i), discarding metric" % Agent.max_buffer)
+                self.logger.debug("Queue full(limit %i), discarding metric", Agent.max_buffer)
 
 
-
-    def is_valid(self, metric, value, time, count):
-        valid_metric = re.search("^([\d\w\-_]+\.)*[\d\w\-_]+$", metric, re.IGNORECASE)
-
-        valid_value = re.search("^-?\d+(\.\d+)?(e-\d+)?$", str(value))
-
-        if valid_metric and valid_value:
-            return True
-
-        # TODO
-        # report_invalid_metric(metric) unless valid_metric
-        # report_invalid_value(metric, value) unless valid_value
-        return False
-
-
-
-    def is_valid_note(self, note):
-        return not bool(re.search("[\n\r]", note))
-
-    def time(self, metric, fun, multiplier=1):
-        start = time.time()
-        value = fun()
-        finish = time.time()
-        duration = finish - start
-        self.gauge(metric, duration * multiplier, start)
-        return value
-
-    def time_ms(self, metric, fun):
-        return self.time(fun, 1000)
-
-    def join_strings(self, strings, joiner):
-        if sys.version_info[0] < 3:
-            return string.join(strings, joiner)
-        else:
-            return joiner.join(strings)
-
-    # Returns unix timestamp integer for all common time/duration formats.
-    def normalize_time(self, time_like):
-        if isinstance(time_like, time.struct_time):
-            time_like = time.mktime(time_like)
-        if isinstance(time_like, datetime.datetime):
-            time_like = time.mktime(time_like.utctimetuple())
-        if isinstance(time_like, datetime.timedelta):
-            time_like = time_like.total_seconds()
-        return int(time_like)
 
 
 
