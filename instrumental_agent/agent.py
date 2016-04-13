@@ -1,5 +1,7 @@
 import os
 import sys
+import fcntl
+import errno
 import atexit
 import logging
 import socket
@@ -199,13 +201,13 @@ class Agent(object):
         while True:
             try:
                 bare_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-                    
+
                 if self.secure:
                     # Rely on server to enforce secure protocol/ciphers
                     self.socket = ssl.wrap_socket(bare_socket)
                 else:
                     self.socket = bare_socket
-                    
+
                 self.socket.connect((self.host, self.port))
 
                 def socket_send(data):
@@ -216,7 +218,7 @@ class Agent(object):
 
                 socket_send("hello version=%s agent=python\n" % Agent.version)
                 socket_send("authenticate %s\n" % self.api_key)
-                
+
                 data = b""
                 ok_count = 0
                 receiving = True
@@ -241,8 +243,12 @@ class Agent(object):
                 if connected:
                     while True:
                         item = self.queue.get()
-                        socket_send(item)
-                        self.queue.task_done()
+                        if self._test_connection():
+                            socket_send(item)
+                            self.queue.task_done()
+                        else:
+                            self.queue.put(item, False)
+                            raise Exception("socket error")
             except (KeyboardInterrupt, SystemExit):
                 raise
             except Exception as error:
@@ -266,7 +272,20 @@ class Agent(object):
                 self.logger.debug("Queue full(limit %i), discarding metric", Agent.max_buffer)
 
 
+    def _test_connection(self):
+        s = self.socket
+        fcntl.fcntl(s, fcntl.F_SETFL, os.O_NONBLOCK)
 
+        try:
+            msg = s.recv(1)
+            return msg == ""
+        except socket.error as e:
+            err = e.args[0]
+            if err == errno.EAGAIN or err == errno.EWOULDBLOCK:
+                return True
+            else:
+                self.logger.debug("Socket connection error")
+                return False
 
 
 # TODO: error handling
