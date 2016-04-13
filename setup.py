@@ -3,7 +3,7 @@
 import sys
 from setuptools import setup, find_packages
 
-NAME = "instrumental"
+NAME = "instrumental_agent"
 VERSION = "0.0.1"
 
 

@@ -1,4 +1,4 @@
-from instrumental import Agent
+from instrumental_agent import Agent
 import re
 import timeit
 import time
