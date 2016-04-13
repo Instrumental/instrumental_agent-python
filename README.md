@@ -65,7 +65,8 @@ instrument_server
 1. Pull latest master
 2. Merge feature branch(es) into master
 3. `script/test`
-4. Increment version
+4. Increment version in:
+  - `setup.py`
 5. Update [CHANGELOG.md](CHANGELOG.md)
 6. Commit "Release version vX.Y.Z"
 7. Push to GitHub

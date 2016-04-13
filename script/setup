@@ -5,3 +5,4 @@ cd "$(dirname "$0")/.."
 type python2 || brew install python
 type python3 || brew install python3
 pip install --upgrade virtualenv
+pip install --upgrade twine
