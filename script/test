@@ -18,5 +18,5 @@ for version in $versions; do
   echo "Testing against $(python --version 2>&1)"
   pip install --upgrade ../
 
-  py.test *_tests.py
+  py.test ./*_tests.py
 done
