@@ -2,7 +2,6 @@ import os
 import sys
 import atexit
 import logging
-import exceptions
 import socket
 import ssl
 import time
@@ -181,7 +180,7 @@ class Agent(object):
                         self.logger.info("Discarding %i metrics.", self.queue.qsize())
             else:
                 self.logger.debug("At Exit handler, join skiped, worker not running.")
-        except exceptions.StandardError as error:
+        except Exception as error:
             self.logger.error("At Exit ERROR: " + str(error))
 
     def _start_connection_worker(self):
