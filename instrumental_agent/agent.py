@@ -187,7 +187,6 @@ class Agent(object):
 
     def _start_connection_worker(self):
         if self.enabled:
-            # TODO disconnect
             self.pid = os.getpid()
             self.failures = 0
             self.logger.debug("Starting thread...")
@@ -290,8 +289,3 @@ class Agent(object):
             else:
                 self.logger.debug("Socket connection error")
                 return False
-
-
-# TODO: error handling
-# TODO: connection retrying
-# TODO: threadsafe init?
