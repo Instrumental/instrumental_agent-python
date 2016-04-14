@@ -4,7 +4,7 @@ import sys
 from setuptools import setup, find_packages
 
 NAME = "instrumental_agent"
-VERSION = "0.1.0"
+VERSION = "0.2.0"
 
 
 
