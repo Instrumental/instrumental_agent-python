@@ -114,7 +114,7 @@ class Agent(object):
         """
         if is_valid(metric, value, time, count):
             self._send_command("gauge", metric, value, normalize_time(time), count)
-        # TODO consider return values or at least follow Ruby patterns
+            return value
 
     def increment(self, metric, value=1, time=time.time(), count=1):
         """
@@ -122,7 +122,7 @@ class Agent(object):
         """
         if is_valid(metric, value, time, count):
             self._send_command("increment", metric, value, normalize_time(time), count)
-        # TODO consider return values or at least follow Ruby patterns
+            return value
 
     def notice(self, note, time=time.time(), duration=0):
         """
@@ -131,6 +131,7 @@ class Agent(object):
         """
         if is_valid_note(note):
             self._send_command("notice", normalize_time(time), normalize_time(duration), note)
+            return note
 
     def time(self, metric, fun, multiplier=1):
         """
