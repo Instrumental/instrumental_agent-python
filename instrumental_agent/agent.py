@@ -67,6 +67,7 @@ class Agent(object):
     """
     backoff = 2
     connect_timeout = 20
+    reply_timeout = 10
     exit_flush_timeout = 5
     hostname = socket.gethostname()
     max_buffer = 5000
@@ -74,7 +75,6 @@ class Agent(object):
     exit_timeout = 1
     log_format = '%(asctime)s - %(name)s - %(levelname)s - %(message)s'
     version = pkg_resources.get_distribution("instrumental").version
-    # reply_timeout = 10
 
     def __init__(self, api_key, collector="collector.instrumentalapp.com:8001", enabled=True, secure=True, verify_cert=True, synchronous=False):
         self.logger = logging.getLogger()
@@ -209,6 +209,7 @@ class Agent(object):
                     self.socket = bare_socket
 
                 self.socket.connect((self.host, self.port))
+                self.socket.settimeout(self.reply_timeout)
 
                 def socket_send(data):
                     if sys.version_info[0] < 3:
@@ -223,6 +224,8 @@ class Agent(object):
                 ok_count = 0
                 receiving = True
                 connected = False
+
+
                 while receiving:
                     data += self.socket.recv(1024)
                     while b"\n" in data:
@@ -241,6 +244,7 @@ class Agent(object):
                             self.logger.debug("auth failed...")
                             break
                 if connected:
+                    self.socket.settimeout(None)
                     while True:
                         item = self.queue.get()
                         if self._test_connection():
