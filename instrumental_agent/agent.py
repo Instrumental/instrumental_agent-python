@@ -112,26 +112,43 @@ class Agent(object):
         """
         Store a gauge for a metric, optionally at a specific time.
         """
-        if is_valid(metric, value, time, count):
-            self._send_command("gauge", metric, value, normalize_time(time), count)
-            return value
+        try:
+            if is_valid(metric, value, time, count):
+                self._send_command("gauge", metric, value, normalize_time(time), count)
+                return value
+        except (KeyboardInterrupt, SystemExit):
+            raise
+        except Exception as error:
+            self._log_exception(error)
 
     def increment(self, metric, value=1, time=time.time(), count=1):
         """
         Increment a metric, optionally more than one or at a specific time.
         """
-        if is_valid(metric, value, time, count):
-            self._send_command("increment", metric, value, normalize_time(time), count)
-            return value
+        try:
+            if is_valid(metric, value, time, count):
+                self._send_command("increment", metric, value, normalize_time(time), count)
+                return value
+        except (KeyboardInterrupt, SystemExit):
+            raise
+        except Exception as error:
+            self._log_exception(error)
+
 
     def notice(self, note, time=time.time(), duration=0):
         """
         Records a note at a specific time and duration. Useful for things like
         deploys or other significant changes.
         """
-        if is_valid_note(note):
-            self._send_command("notice", normalize_time(time), normalize_time(duration), note)
-            return note
+        try:
+            if is_valid_note(note):
+                self._send_command("notice", normalize_time(time), normalize_time(duration), note)
+                return note
+        except (KeyboardInterrupt, SystemExit):
+            raise
+        except Exception as error:
+            self._log_exception(error)
+
 
     def time(self, metric, fun, multiplier=1):
         """
@@ -139,19 +156,29 @@ class Agent(object):
         be used to scale the duration to desired unit or change the duration
         in some meaningful way. Default is in seconds.
         """
-        start = time.time()
-        value = fun()
-        finish = time.time()
-        duration = finish - start
-        self.gauge(metric, duration * multiplier, start)
-        return value
+        try:
+            start = time.time()
+            value = fun()
+            finish = time.time()
+            duration = finish - start
+            self.gauge(metric, duration * multiplier, start)
+            return value
+        except (KeyboardInterrupt, SystemExit):
+            raise
+        except Exception as error:
+            self._log_exception(error)
 
     def time_ms(self, metric, fun):
         """
         Store the execution duration of a function in a metric. Execution time
         is measured in milliseconds.
         """
-        return self.time(metric, fun, 1000)
+        try:
+            return self.time(metric, fun, 1000)
+        except (KeyboardInterrupt, SystemExit):
+            raise
+        except Exception as error:
+            self._log_exception(error)
 
     def is_running(self):
         """Returns True/False if the worker is running"""
@@ -259,10 +286,13 @@ class Agent(object):
                 self.failures += 1
                 delay = min((self.failures - 1) ** Agent.backoff, Agent.max_reconnect_delay)
                 time.sleep(delay)
-                self.logger.debug("EXCEPTION %s", str(error))
+                self._log_exception(error)
                 import traceback
                 traceback.print_exc(file=sys.stdout)
                 sys.exit()
+
+    def _log_exception(self, error):
+        self.logger.debug("EXCEPTION %s", str(error))
 
     def _send_command(self, cmd, *args):
         if self.enabled:
