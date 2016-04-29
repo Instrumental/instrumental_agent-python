@@ -22,11 +22,11 @@ If you are on a system with `easy_install` but not [`pip`](http://www.pip-instal
 
 ## Usage
 
-Visit [instrumentalapp.com](https://instrumentalapp.com) and create an account, then initialize the agent with your API key, found in the Docs section.
+Visit [instrumentalapp.com](https://instrumentalapp.com) and create an account, then initialize the agent with your API token, found in the [token documentation](https://instrumentalapp.com/docs/tokens).
 
 ```python
 from instrumental_agent import Agent
-i = Agent("YOUR_API_KEY", enabled=True)
+i = Agent("PROJECT_API_TOKEN", enabled=True)
 ```
 
 You'll  probably want something like the above, only enabling the agent in production mode so you don't have development and production data writing to the same place. Or you can setup two projects, so that you can verify stats in one, and release them to production in another.
