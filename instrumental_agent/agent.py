@@ -96,6 +96,7 @@ class Agent(object):
         self.enabled = enabled
         self.synchronous = synchronous
         self.worker = False
+        self.bare_socket = False
         self.socket = False
 
         self.logger = logging.getLogger()
@@ -227,13 +228,13 @@ class Agent(object):
         self.logger.debug("worker starting...")
         while True:
             try:
-                bare_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+                self.bare_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 
                 if self.secure:
                     # Rely on server to enforce secure protocol/ciphers
-                    self.socket = ssl.wrap_socket(bare_socket)
+                    self.socket = ssl.wrap_socket(self.bare_socket)
                 else:
-                    self.socket = bare_socket
+                    self.socket = self.bare_socket
 
                 self.socket.connect((self.host, self.port))
                 self.socket.settimeout(self.reply_timeout)
@@ -307,7 +308,7 @@ class Agent(object):
 
 
     def _test_connection(self):
-        s = self.socket
+        s = self.bare_socket
         fcntl.fcntl(s, fcntl.F_SETFL, os.O_NONBLOCK)
 
         try:
