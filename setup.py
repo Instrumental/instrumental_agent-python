@@ -4,8 +4,7 @@ import sys
 from setuptools import setup, find_packages
 
 NAME = "instrumental_agent"
-VERSION = "0.2.0"
-
+VERSION = "1.0.0"
 
 
 # To install the library, run the following
@@ -28,7 +27,7 @@ setup(
     url="https://github.com/instrumental/instrumental-python",
     keywords=["Instrumental", "API", "Metrics", "APM"],
     classifiers=[ # see https://pypi.python.org/pypi?%3Aaction=list_classifiers
-        "Development Status :: 4 - Beta",
+        "Development Status :: 5 - Production/Stable",
 
         "Environment :: Web Environment",
 

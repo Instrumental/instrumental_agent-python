@@ -70,7 +70,7 @@ instrument_server
 4. Increment version in:
   - `setup.py`
 5. Update [CHANGELOG.md](CHANGELOG.md)
-6. Commit "Release version vX.Y.Z"
+6. Commit "Release vX.Y.Z"
 7. Push to GitHub
 8. Tag version: `git tag 'vX.Y.Z' && git push --tags`
 9. Build packages `python setup.py sdist bdist_wheel`
