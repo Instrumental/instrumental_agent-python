@@ -1,3 +1,7 @@
+### 1.0.1 [May 13, 2016]
+* Fix reference to old package name in version lookup which would cause the agent to error on initialization
+* Use bare socket when testing connection to prevent blocking behavior on an SSL wrapped socket
+
 ### 1.0.0 [May 13, 2016]
 * No significant code changes
 
