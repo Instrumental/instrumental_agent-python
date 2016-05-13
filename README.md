@@ -8,13 +8,13 @@ This agent supports custom metric monitoring for Python applications, compatible
 ## Installation
 
 ```bash
-pip install --upgrade instrumental
+pip install --upgrade instrumental_agent
 ```
 
 or
 
 ```bash
-easy_install --upgrade instrumental
+easy_install --upgrade instrumental_agent
 ```
 
 If you are on a system with `easy_install` but not [`pip`](http://www.pip-installer.org/en/latest/index.html), you can use `easy_install` instead. If you're not using [`virtualenv`](http://www.virtualenv.org/), you may have to prefix those commands with `sudo`.
