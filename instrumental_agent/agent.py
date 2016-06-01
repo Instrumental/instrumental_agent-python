@@ -109,26 +109,30 @@ class Agent(object):
             self.queue = Queue(Agent.max_buffer)
             self._setup_cleanup_at_exit()
 
-    def gauge(self, metric, value, time=time.time(), count=1):
+    def gauge(self, metric, value, timestamp=None, count=1):
         """
         Store a gauge for a metric, optionally at a specific time.
         """
+        if timestamp is None:
+            timestamp = time.time()
         try:
-            if is_valid(metric, value, time, count):
-                self._send_command("gauge", metric, value, normalize_time(time), count)
+            if is_valid(metric, value, timestamp, count):
+                self._send_command("gauge", metric, value, normalize_time(timestamp), count)
                 return value
         except (KeyboardInterrupt, SystemExit):
             raise
         except Exception as error:
             self._log_exception(error)
 
-    def increment(self, metric, value=1, time=time.time(), count=1):
+    def increment(self, metric, value=1, timestamp=None, count=1):
         """
         Increment a metric, optionally more than one or at a specific time.
         """
+        if timestamp is None:
+            timestamp = time.time()
         try:
-            if is_valid(metric, value, time, count):
-                self._send_command("increment", metric, value, normalize_time(time), count)
+            if is_valid(metric, value, timestamp, count):
+                self._send_command("increment", metric, value, normalize_time(timestamp), count)
                 return value
         except (KeyboardInterrupt, SystemExit):
             raise
@@ -136,14 +140,16 @@ class Agent(object):
             self._log_exception(error)
 
 
-    def notice(self, note, time=time.time(), duration=0):
+    def notice(self, note, timestamp=None, duration=0):
         """
         Records a note at a specific time and duration. Useful for things like
         deploys or other significant changes.
         """
+        if timestamp is None:
+            timestamp = time.time()
         try:
             if is_valid_note(note):
-                self._send_command("notice", normalize_time(time), normalize_time(duration), note)
+                self._send_command("notice", normalize_time(timestamp), normalize_time(duration), note)
                 return note
         except (KeyboardInterrupt, SystemExit):
             raise
