@@ -69,6 +69,7 @@ instrument_server
 3. `script/test`
 4. Increment version in:
   - `setup.py`
+  - `instrumental_agent/agent.py`
 5. Update [CHANGELOG.md](CHANGELOG.md)
 6. Commit "Release vX.Y.Z"
 7. Push to GitHub

@@ -74,7 +74,7 @@ class Agent(object):
     max_reconnect_delay = 15
     exit_timeout = 1
     log_format = '%(asctime)s - %(name)s - %(levelname)s - %(message)s'
-    version = pkg_resources.get_distribution("instrumental_agent").version
+    version = "1.0.1"
 
     def __init__(self, api_key, collector="collector.instrumentalapp.com:8001", enabled=True, secure=True, verify_cert=True, synchronous=False):
         self.logger = logging.getLogger()
