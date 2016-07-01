@@ -251,7 +251,7 @@ class Agent(object):
                     else:
                         self.socket.send(bytes(data, "ASCII"))
 
-                socket_send("hello python/instrumental_agent/%(version)s hostname %(hostname)s\n" % {"version": Agent.version, "hostname": Agent.hostname})
+                socket_send("hello version python/instrumental_agent/%(version)s hostname %(hostname)s\n" % {"version": Agent.version, "hostname": Agent.hostname})
                 socket_send("authenticate %s\n" % self.api_key)
 
                 data = b""
