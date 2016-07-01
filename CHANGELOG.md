@@ -1,3 +1,6 @@
+### Unreleased
+* make handshake version string match pattern of other 1st-party agents
+
 ### 1.0.2 [June 6, 2016]
 * Fix time defaulting to agent initialize instead of call time
 * Send correct agent version in hello
