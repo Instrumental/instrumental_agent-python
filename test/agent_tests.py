@@ -2,8 +2,8 @@ from instrumental_agent import Agent
 import re
 import timeit
 import time
-import time
 import datetime
+import calendar
 
 def test_should_increment():
     a = Agent("56c08a1a5b25ed2425b6dce7700edae5", collector="localhost:8000", secure=False)
@@ -32,10 +32,11 @@ def test_should_increment_with_time():
 
 def test_should_increment_with_datetime():
     a = Agent("56c08a1a5b25ed2425b6dce7700edae5", collector="localhost:8000", secure=False)
-    now = datetime.datetime.fromtimestamp(123)
+    now = datetime.datetime.utcnow()
+    expected_timestamp = calendar.timegm(now.utctimetuple())
     a.increment("python.increment", 1, now)
     assert(a.queue.qsize()) == 1
-    expected_message = re.compile('.*(increment python.increment 1 %i 1).*' % 123)
+    expected_message = re.compile('.*(increment python.increment 1 %i 1).*' % expected_timestamp)
     match = expected_message.match(str(a.queue.queue))
     assert match, "expected increment to be in queue, instead have {0}".format(a.queue.queue)
 
@@ -98,10 +99,11 @@ def test_should_send_notice_with_struct_time():
 
 def test_should_send_notice_with_datetime():
     a = Agent("56c08a1a5b25ed2425b6dce7700edae5", collector="localhost:8000", secure=False)
-    now = datetime.datetime.fromtimestamp(123)
+    now = datetime.datetime.utcnow()
+    expected_timestamp = calendar.timegm(now.utctimetuple())
     a.notice("Python Agent Test Is Running", now, 10)
     assert(a.queue.qsize()) == 1
-    expected_message = re.compile('.*(notice %i 10 Python Agent Test Is Running).*' % 123)
+    expected_message = re.compile('.*(notice %i 10 Python Agent Test Is Running).*' % expected_timestamp)
     match = expected_message.match(str(a.queue.queue))
     assert match, "expected gauge to be in queue, instead have {0}".format(a.queue.queue)
 
