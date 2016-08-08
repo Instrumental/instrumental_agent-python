@@ -8,6 +8,7 @@ import socket
 import ssl
 import time
 import datetime
+import calendar
 import re
 import string
 if sys.version_info[0] < 3:
@@ -24,7 +25,7 @@ def normalize_time(time_like):
     if isinstance(time_like, time.struct_time):
         time_like = time.mktime(time_like)
     if isinstance(time_like, datetime.datetime):
-        time_like = time.mktime(time_like.utctimetuple())
+        time_like = calendar.timegm(time_like.utctimetuple())
     if isinstance(time_like, datetime.timedelta):
         time_like = time_like.total_seconds()
     return int(time_like)
