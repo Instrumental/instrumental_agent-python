@@ -1,5 +1,6 @@
-### Unreleased
-* make handshake version string match pattern of other 1st-party agents
+### 1.1.0 [August 8, 2016]
+* **BUGFIX**: Preserve timezone information when sending a time with a metric [[#11](https://github.com/Instrumental/instrumental_agent-python/pull/11)]
+* make handshake version string match pattern of other 1st-party agents [[#12](https://github.com/Instrumental/instrumental_agent-python/pull/12)]
 
 ### 1.0.2 [June 6, 2016]
 * Fix time defaulting to agent initialize instead of call time
