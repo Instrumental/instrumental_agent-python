@@ -53,14 +53,9 @@ i.notice('Testing socket buffer increase', time.time(), timedelta(minutes=20)) #
 ```
 
 
-## Server Stats
+## Server Metrics
 
-Want some general server stats (load, memory, etc.)? Check out the [instrumental_tools](https://github.com/expectedbehavior/instrumental_tools) gem.
-
-```sh
-gem install instrumental_tools
-instrument_server
-```
+Want server stats like load, memory, etc.? Check out [InstrumentalD](https://github.com/instrumental/instrumentald).
 
 ## Release Process
 
