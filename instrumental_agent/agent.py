@@ -17,8 +17,6 @@ else:
     from queue import Queue, Full
 
 from threading import Thread
-from logging import NullHandler
-import pkg_resources
 
 
 def normalize_time(time_like):
