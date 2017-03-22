@@ -89,7 +89,7 @@ class Agent(object):
     max_buffer = 5000
     max_reconnect_delay = 15
     exit_timeout = 1
-    version = "1.2.0"
+    version = "1.2.1"
 
     def __init__(self, api_key, collector="collector.instrumentalapp.com:8001", enabled=True, secure=True, verify_cert=True, synchronous=False):
         self.logger = logging.getLogger(__name__)

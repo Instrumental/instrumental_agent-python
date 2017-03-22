@@ -1,3 +1,6 @@
+### 1.2.1 [March 22, 2016]
+* **BUGFIX** Bugfix in new logging code to avoid warnings when using a logger without a handler [[#15](https://github.com/Instrumental/instrumental_agent-python/pull/15)]
+
 ### 1.2.0 [March 22, 2016]
 * Make logging configurable and silence it by default [[#14](https://github.com/Instrumental/instrumental_agent-python/pull/14)]
 
