@@ -17,6 +17,7 @@ else:
     from queue import Queue, Full
 
 from threading import Thread
+from logging import NullHandler
 import pkg_resources
 
 
@@ -94,6 +95,7 @@ class Agent(object):
 
     def __init__(self, api_key, collector="collector.instrumentalapp.com:8001", enabled=True, secure=True, verify_cert=True, synchronous=False):
         self.logger = logging.getLogger(__name__)
+        self.logger..addHandler(NullHandler())
         self.logger.setLevel(logging.DEBUG)
         self.logger.debug("Initializing...")
 
