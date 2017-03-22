@@ -1,3 +1,6 @@
+### 1.2.0 [March 22, 2016]
+* Make logging configurable and silence it by default [[#14](https://github.com/Instrumental/instrumental_agent-python/pull/14)]
+
 ### 1.1.0 [August 8, 2016]
 * **BUGFIX**: Preserve timezone information when sending a time with a metric [[#11](https://github.com/Instrumental/instrumental_agent-python/pull/11)]
 * make handshake version string match pattern of other 1st-party agents [[#12](https://github.com/Instrumental/instrumental_agent-python/pull/12)]
