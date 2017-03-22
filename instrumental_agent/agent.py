@@ -62,6 +62,22 @@ def join(strings, joiner):
         return joiner.join(strings)
 
 
+def add_stderr_logger(level=logging.DEBUG):
+    """
+    Helper for quickly adding a StreamHandler to the logger. Useful for
+    debugging.
+
+    Returns the handler after adding it.
+    """
+    logger = logging.getLogger(__name__)
+    handler = logging.StreamHandler()
+    handler.setFormatter(logging.Formatter('%(asctime)s %(levelname)s %(message)s'))
+    logger.addHandler(handler)
+    logger.setLevel(level)
+    logger.debug('Added a stderr logging handler to logger: %s', __name__)
+    return handler
+
+
 class Agent(object):
     """
     Used to connect to Instrumental and send metric data.
@@ -74,19 +90,11 @@ class Agent(object):
     max_buffer = 5000
     max_reconnect_delay = 15
     exit_timeout = 1
-    log_format = '%(asctime)s - %(name)s - %(levelname)s - %(message)s'
     version = "1.1.0"
 
     def __init__(self, api_key, collector="collector.instrumentalapp.com:8001", enabled=True, secure=True, verify_cert=True, synchronous=False):
-        self.logger = logging.getLogger()
+        self.logger = logging.getLogger(__name__)
         self.logger.setLevel(logging.DEBUG)
-
-        handler = logging.StreamHandler(sys.stderr)
-        handler.setLevel(logging.DEBUG)
-        formatter = logging.Formatter(Agent.log_format)
-        handler.setFormatter(formatter)
-        self.logger.addHandler(handler)
-
         self.logger.debug("Initializing...")
 
         self.api_key = api_key
@@ -100,8 +108,6 @@ class Agent(object):
         self.bare_socket = False
         self.socket = False
 
-        self.logger = logging.getLogger()
-        self.logger.setLevel(logging.DEBUG)
 
         self.pid = None
         self.failures = 0
