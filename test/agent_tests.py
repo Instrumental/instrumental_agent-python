@@ -124,7 +124,7 @@ def test_should_not_send_notice_with_invalid_message():
 def test_should_not_block():
     a = Agent("56c08a1a5b25ed2425b6dce7700edae5", collector="localhost:8000", secure=False)
     for i in range(Agent.max_buffer + 1):
-        assert timeit.timeit(lambda: a.increment("z"), number=1) < 0.01
+        assert timeit.timeit(lambda: a.increment("z"), number=1) < 0.015
 
 def test_time_should_return_original_return_value():
     a = Agent("56c08a1a5b25ed2425b6dce7700edae5", collector="localhost:8000", secure=False)
