@@ -98,9 +98,17 @@ class Agent(object):
         self.logger.debug("Initializing...")
 
         self.api_key = api_key
-        self.host, self.port = collector.split(":")
-        self.port = int(self.port)
-        self.secure = secure
+        if sys.version_info[0] < 3:
+            self.host, self.port = collector.split(":")
+            self.port = int(self.port)
+            self.secure = secure
+        else:
+            if secure:
+                self.logger.warning("Secure mode does not work in Python 3. Your settings are being adjusted to non-secure mode. See https://github.com/Instrumental/instrumental_agent-python/issues/16 for details.")
+            self.host = "collector.instrumentalapp.com"
+            self.port = 8000
+            self.secure = False
+
         self.verify_cert = verify_cert
         self.enabled = enabled
         self.synchronous = synchronous
