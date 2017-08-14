@@ -4,7 +4,7 @@ import sys
 from setuptools import setup, find_packages
 
 NAME = "instrumental_agent"
-VERSION = "1.2.1"
+VERSION = "1.3.0"
 
 
 # To install the library, run the following

@@ -1,3 +1,6 @@
+### 1.3.0 [August 14, 2017]
+* **BUGFIX** Add workaround for secure mode in python 3 as the original code for python 2 is non-functional [[#18](https://github.com/Instrumental/instrumental_agent-python/pull/15)]
+
 ### 1.2.1 [March 22, 2016]
 * **BUGFIX** Bugfix in new logging code to avoid warnings when using a logger without a handler [[#15](https://github.com/Instrumental/instrumental_agent-python/pull/15)]
 
